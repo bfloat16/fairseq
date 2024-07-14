@@ -17,7 +17,7 @@ from .dynamic_crf_layer import DynamicCRF
 from .ema_module import EMAModuleConfig, EMAModule
 from .fairseq_dropout import FairseqDropout
 from .fp32_batch_norm import Fp32BatchNorm
-from .fp32_group_norm import Fp32GroupNorm
+from .fp32_group_norm import Fp32GroupNorm, GroupNormMasked
 from .fp32_instance_norm import Fp32InstanceNorm
 from .gelu import gelu, gelu_accurate
 from .grad_multiply import GradMultiply
@@ -25,6 +25,7 @@ from .gumbel_vector_quantizer import GumbelVectorQuantizer
 from .kmeans_vector_quantizer import KmeansVectorQuantizer
 from .layer_drop import LayerDropModuleList
 from .layer_norm import Fp32LayerNorm, LayerNorm
+from .cond_layer_norm import CondLayerNorm
 from .learned_positional_embedding import LearnedPositionalEmbedding
 from .lightweight_convolution import LightweightConv, LightweightConv1dTBC
 from .linearized_convolution import LinearizedConvolution

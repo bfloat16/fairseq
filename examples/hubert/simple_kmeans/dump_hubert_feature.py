@@ -1,17 +1,10 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
 import logging
 import os
 import sys
-
 import fairseq
-import soundfile as sf
 import torch
 import torch.nn.functional as F
-
+import argparse
 from feature_utils import get_path_iterator, dump_feature
 from fairseq.data.audio.audio_utils import get_features_or_waveform
 
@@ -24,14 +17,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("dump_hubert_feature")
 
-
 class HubertFeatureReader(object):
     def __init__(self, ckpt_path, layer, max_chunk=1600000):
-        (
-            model,
-            cfg,
-            task,
-        ) = fairseq.checkpoint_utils.load_model_ensemble_and_task([ckpt_path])
+        (model, cfg, task) = fairseq.checkpoint_utils.load_model_ensemble_and_task([ckpt_path])
         self.model = model[0].eval().cuda()
         self.task = task
         self.layer = layer
@@ -68,25 +56,21 @@ class HubertFeatureReader(object):
                 feat.append(feat_chunk)
         return torch.cat(feat, 1).squeeze(0)
 
-
 def main(tsv_dir, split, ckpt_path, layer, nshard, rank, feat_dir, max_chunk):
     reader = HubertFeatureReader(ckpt_path, layer, max_chunk)
     generator, num = get_path_iterator(f"{tsv_dir}/{split}.tsv", nshard, rank)
     dump_feature(reader, generator, num, split, nshard, rank, feat_dir)
 
-
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("tsv_dir")
-    parser.add_argument("split")
-    parser.add_argument("ckpt_path")
-    parser.add_argument("layer", type=int)
-    parser.add_argument("nshard", type=int)
-    parser.add_argument("rank", type=int)
-    parser.add_argument("feat_dir")
-    parser.add_argument("--max_chunk", type=int, default=1600000)
+    parser.add_argument("--tsv_dir",   type=str, required=False, default="data/metadata")
+    parser.add_argument("--split",     type=str, required=False, default="train")
+    parser.add_argument("--ckpt_path", type=str, required=False, default="chinese-hubert-large-fairseq-ckpt.pt")
+    parser.add_argument("--layer",     type=int, required=False, default=13)
+    parser.add_argument("--nshard",    type=int, required=False, default=1)
+    parser.add_argument("--rank",      type=int, required=False, default=0)
+    parser.add_argument("--feat_dir",  type=str, required=False, default="data/metadata")
+    parser.add_argument("--max_chunk", type=int, required=False, default=1600000)
     args = parser.parse_args()
     logger.info(args)
 

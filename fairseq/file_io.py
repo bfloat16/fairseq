@@ -147,6 +147,8 @@ class PathManager:
 
     @staticmethod
     def rename(src: str, dst: str):
+        if os.path.exists(dst):
+            os.remove(dst)
         os.rename(src, dst)
 
     """
