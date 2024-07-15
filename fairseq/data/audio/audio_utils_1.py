@@ -1,8 +1,5 @@
-import os
 import numpy as np
-from scipy import signal as sg
-import pdb
-
+import parselmouth
 
 def make_lowshelf(g, fc, Q, fs=44100):
     """Generate filter coefficients for 2nd order Lowshelf filter.
@@ -22,7 +19,7 @@ def make_lowshelf(g, fc, Q, fs=44100):
         tuple: (b, a) filter coefficients 
     """
     # convert gain from dB to linear
-    g = np.power(10,(g/20))
+    g = np.power(10, (g / 20))
 
     # initial values
     A = np.max([0.0, np.sqrt(g)])
@@ -41,13 +38,7 @@ def make_lowshelf(g, fc, Q, fs=44100):
     a1 = -2 * (aminus1 + aplus1 * coso)
     a2 = aplus1 + aminus1TimesCoso - beta
 
-    # output coefs 
-    #b = np.array([b0/a0, b1/a0, b2/a0])
-    #a = np.array([a0/a0, a1/a0, a2/a0])
-
-    return np.array([[b0/a0, b1/a0, b2/a0, 1.0, a1/a0, a2/a0]])
-
-
+    return np.array([[b0 / a0, b1 / a0, b2 / a0, 1.0, a1 / a0, a2 / a0]])
 
 def make_highself(g, fc, Q, fs=44100):
     """Generate filter coefficients for 2nd order Highshelf filter.
@@ -85,14 +76,8 @@ def make_highself(g, fc, Q, fs=44100):
     a0 = aplus1 - aminus1TimesCoso + beta
     a1 = 2 * (aminus1 - aplus1 * coso)
     a2 = aplus1 - aminus1TimesCoso - beta
-
-    # output coefs
-    #b = np.array([b0/a0, b1/a0, b2/a0])
-    #a = np.array([a0/a0, a1/a0, a2/a0])
       
-    return np.array([[b0/a0, b1/a0, b2/a0, 1.0, a1/a0, a2/a0]])
-
-
+    return np.array([[b0 / a0, b1 / a0, b2 / a0, 1.0, a1 / a0, a2 / a0]])
 
 def make_peaking(g, fc, Q, fs=44100):
     """Generate filter coefficients for 2nd order Peaking EQ.
@@ -112,7 +97,7 @@ def make_peaking(g, fc, Q, fs=44100):
         tuple: (b, a) filter coefficients 
     """
     # convert gain from dB to linear
-    g = np.power(10,(g/20))
+    g = np.power(10, (g / 20))
 
     # initial values
     A = np.max([0.0, np.sqrt(g)])
@@ -129,14 +114,8 @@ def make_peaking(g, fc, Q, fs=44100):
     a0 = 1 + alphaOverA
     a1 = c2
     a2 = 1 - alphaOverA
-
-    # output coefs
-    #b = np.array([b0/a0, b1/a0, b2/a0])
-    #a = np.array([a0/a0, a1/a0, a2/a0])
     
-    return np.array([[b0/a0, b1/a0, b2/a0, 1.0, a1/a0, a2/a0]])
-
-
+    return np.array([[b0 / a0, b1 / a0, b2 / a0, 1.0, a1 / a0, a2 / a0]])
 
 def params2sos(G, Fc, Q, fs):
     """Convert 5 band EQ paramaters to 2nd order sections.
@@ -170,12 +149,9 @@ def params2sos(G, Fc, Q, fs):
     c9 = make_highself(G[9], Fc[9], Q[9], fs=fs)
 
     # stuff coefficients into second order sections structure
-    sos = np.concatenate([c0,c1,c2,c3,c4,c5,c6,c7,c8,c9], axis=0)
-
+    sos = np.concatenate([c0, c1, c2, c3, c4, c5, c6, c7, c8, c9], axis=0)
     return sos
 
-
-import parselmouth
 def change_gender(x, fs, lo, hi, ratio_fs, ratio_ps, ratio_pr):
     s = parselmouth.Sound(x, sampling_frequency=fs)
     f0 = s.to_pitch_ac(pitch_floor=lo, pitch_ceiling=hi, time_step=0.8/lo)
@@ -188,4 +164,3 @@ def change_gender_f0(x, fs, lo, hi, ratio_fs, new_f0_med, ratio_pr):
     s = parselmouth.Sound(x, sampling_frequency=fs)
     ss = parselmouth.praat.call(s, "Change gender", lo, hi, ratio_fs, new_f0_med, ratio_pr, 1.0)
     return ss.values.squeeze(0)
-

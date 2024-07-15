@@ -64,7 +64,7 @@ def main(tsv_dir, split, ckpt_path, layer, nshard, rank, feat_dir, max_chunk):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--tsv_dir",   type=str, required=False, default="data/metadata")
-    parser.add_argument("--split",     type=str, required=False, default="train")
+    parser.add_argument("--split",     type=str, required=False, default="valid")
     parser.add_argument("--ckpt_path", type=str, required=False, default="chinese-hubert-large-fairseq-ckpt.pt")
     parser.add_argument("--layer",     type=int, required=False, default=13)
     parser.add_argument("--nshard",    type=int, required=False, default=1)

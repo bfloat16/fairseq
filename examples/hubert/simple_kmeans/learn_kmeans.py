@@ -81,9 +81,6 @@ def load_feature_shard(feat_dir, split, nshard, rank, percent):
             indices = np.random.choice(len(feat), current_sample_size, replace=False)
             sampled_features.append(feat[indices])
             sampled_count += current_sample_size
-        # 如果已达到需要的采样数量，停止加载更多文件
-        if sampled_count >= nsample:
-            break
 
     # 将所有采样的特征拼接起来
     final_sampled_features = np.concatenate(sampled_features, axis=0)
@@ -149,10 +146,10 @@ if __name__ == "__main__":
     parser.add_argument("--feat_dir",           type=str,   default="data/metadata")
     parser.add_argument("--split",              type=str,   default="valid")
     parser.add_argument("--nshard",             type=int,   default=1)
-    parser.add_argument("--km_path",            type=str,   default="data/label/train_km")
+    parser.add_argument("--km_path",            type=str,   default="data/label/valid_km")
     parser.add_argument("--n_clusters",         type=int,   default=500)
     parser.add_argument("--seed",               type=int,   default=0)
-    parser.add_argument("--percent",            type=float, default=0.5, help="sample a subset; -1 for all")
+    parser.add_argument("--percent",            type=float, default=1.0, help="sample a subset; -1 for all")
     parser.add_argument("--init",               type=str,   default="k-means++")
     parser.add_argument("--max_iter",           type=int,   default=100)
     parser.add_argument("--batch_size",         type=int,   default=10000)
