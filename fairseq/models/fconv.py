@@ -1,8 +1,3 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
 import math
 
 import torch
@@ -55,50 +50,29 @@ class FConvModel(FairseqEncoderDecoderModel):
             }
 
         return {
-            "conv.wmt14.en-fr": moses_subword(
-                "https://dl.fbaipublicfiles.com/fairseq/models/wmt14.v2.en-fr.fconv-py.tar.bz2"
-            ),
-            "conv.wmt14.en-de": moses_subword(
-                "https://dl.fbaipublicfiles.com/fairseq/models/wmt14.en-de.fconv-py.tar.bz2"
-            ),
-            "conv.wmt17.en-de": moses_subword(
-                "https://dl.fbaipublicfiles.com/fairseq/models/wmt17.v2.en-de.fconv-py.tar.bz2"
-            ),
+            "conv.wmt14.en-fr": moses_subword("https://dl.fbaipublicfiles.com/fairseq/models/wmt14.v2.en-fr.fconv-py.tar.bz2"),
+            "conv.wmt14.en-de": moses_subword("https://dl.fbaipublicfiles.com/fairseq/models/wmt14.en-de.fconv-py.tar.bz2"),
+            "conv.wmt17.en-de": moses_subword("https://dl.fbaipublicfiles.com/fairseq/models/wmt17.v2.en-de.fconv-py.tar.bz2")
         }
 
     def __init__(self, encoder, decoder):
         super().__init__(encoder, decoder)
-        self.encoder.num_attention_layers = sum(
-            layer is not None for layer in decoder.attention
-        )
+        self.encoder.num_attention_layers = sum(layer is not None for layer in decoder.attention)
 
     @staticmethod
     def add_args(parser):
         """Add model-specific arguments to the parser."""
         # fmt: off
-        parser.add_argument('--dropout', type=float, metavar='D',
-                            help='dropout probability')
-        parser.add_argument('--encoder-embed-dim', type=int, metavar='N',
-                            help='encoder embedding dimension')
-        parser.add_argument('--encoder-embed-path', type=str, metavar='STR',
-                            help='path to pre-trained encoder embedding')
-        parser.add_argument('--encoder-layers', type=str, metavar='EXPR',
-                            help='encoder layers [(dim, kernel_size), ...]')
-        parser.add_argument('--decoder-embed-dim', type=int, metavar='N',
-                            help='decoder embedding dimension')
-        parser.add_argument('--decoder-embed-path', type=str, metavar='STR',
-                            help='path to pre-trained decoder embedding')
-        parser.add_argument('--decoder-layers', type=str, metavar='EXPR',
-                            help='decoder layers [(dim, kernel_size), ...]')
-        parser.add_argument('--decoder-out-embed-dim', type=int, metavar='N',
-                            help='decoder output embedding dimension')
-        parser.add_argument('--decoder-attention', type=str, metavar='EXPR',
-                            help='decoder attention [True, ...]')
-        parser.add_argument('--share-input-output-embed', action='store_true',
-                            help='share input and output embeddings (requires'
-                                 ' --decoder-out-embed-dim and --decoder-embed-dim'
-                                 ' to be equal)')
-        # fmt: on
+        parser.add_argument('--dropout', type=float, metavar='D', help='dropout probability')
+        parser.add_argument('--encoder-embed-dim', type=int, metavar='N', help='encoder embedding dimension')
+        parser.add_argument('--encoder-embed-path', type=str, metavar='STR', help='path to pre-trained encoder embedding')
+        parser.add_argument('--encoder-layers', type=str, metavar='EXPR', help='encoder layers [(dim, kernel_size), ...]')
+        parser.add_argument('--decoder-embed-dim', type=int, metavar='N', help='decoder embedding dimension')
+        parser.add_argument('--decoder-embed-path', type=str, metavar='STR', help='path to pre-trained decoder embedding')
+        parser.add_argument('--decoder-layers', type=str, metavar='EXPR', help='decoder layers [(dim, kernel_size), ...]')
+        parser.add_argument('--decoder-out-embed-dim', type=int, metavar='N', help='decoder output embedding dimension')
+        parser.add_argument('--decoder-attention', type=str, metavar='EXPR', help='decoder attention [True, ...]')
+        parser.add_argument('--share-input-output-embed', action='store_true', help='share input and output embeddings (requires --decoder-out-embed-dim and --decoder-embed-dim to be equal)')
 
     @classmethod
     def build_model(cls, args, task):
@@ -175,9 +149,7 @@ class FConvEncoder(FairseqEncoder):
         self.padding_idx = dictionary.pad()
         self.embed_tokens = Embedding(num_embeddings, embed_dim, self.padding_idx)
         if embed_dict:
-            self.embed_tokens = utils.load_embedding(
-                embed_dict, self.dictionary, self.embed_tokens
-            )
+            self.embed_tokens = utils.load_embedding(embed_dict, self.dictionary, self.embed_tokens)
 
         self.embed_positions = PositionalEmbedding(
             max_positions,
@@ -257,9 +229,7 @@ class FConvEncoder(FairseqEncoder):
 
         residuals = [x]
         # temporal convolutions
-        for proj, conv, res_layer in zip(
-            self.projections, self.convolutions, self.residuals
-        ):
+        for proj, conv, res_layer in zip(self.projections, self.convolutions, self.residuals):
             if res_layer > 0:
                 residual = residuals[-res_layer]
                 residual = residual if proj is None else proj(residual)
@@ -612,9 +582,7 @@ class FConvDecoder(FairseqIncrementalDecoder):
 
         This is cached when doing incremental inference.
         """
-        cached_result = utils.get_incremental_state(
-            self, incremental_state, "encoder_out"
-        )
+        cached_result = utils.get_incremental_state(self, incremental_state, "encoder_out")
         if cached_result is not None:
             return cached_result
 

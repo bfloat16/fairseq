@@ -613,10 +613,7 @@ def all_gather_list(data, group=None, max_size=16384):
     world_size = get_world_size(group=group)
 
     buffer_size = max_size * world_size
-    if (
-        not hasattr(all_gather_list, "_buffer")
-        or all_gather_list._buffer.numel() < buffer_size
-    ):
+    if (not hasattr(all_gather_list, "_buffer") or all_gather_list._buffer.numel() < buffer_size):
         all_gather_list._buffer = torch.cuda.ByteTensor(buffer_size)
         all_gather_list._cpu_buffer = torch.ByteTensor(max_size).pin_memory()
     buffer = all_gather_list._buffer
@@ -629,9 +626,7 @@ def all_gather_list(data, group=None, max_size=16384):
     header_size = 4  # size of header that contains the length of the encoded data
     size = header_size + enc_size
     if size > max_size:
-        raise ValueError(
-            "encoded data size ({}) exceeds max_size ({})".format(size, max_size)
-        )
+        raise ValueError("encoded data size ({}) exceeds max_size ({})".format(size, max_size))
 
     header = struct.pack(">I", enc_size)
     cpu_buffer[:size] = torch.ByteTensor(list(header + enc))

@@ -1,12 +1,3 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
-#
-# This source code is licensed under the MIT license found in the
-# LICENSE file in the root directory of this source tree.
-
-"""
-Train a network across multiple GPUs.
-"""
-
 import contextlib
 import logging
 import os
@@ -46,9 +37,7 @@ class Trainer(object):
     def __init__(self, cfg: FairseqConfig, task, model, criterion, quantizer=None):
 
         if isinstance(cfg, Namespace):
-            logger.warning(
-                "argparse.Namespace configuration is deprecated! Automatically converting to OmegaConf"
-            )
+            logger.warning("argparse.Namespace configuration is deprecated! Automatically converting to OmegaConf")
             cfg = convert_namespace_to_omegaconf(cfg)
 
         self.cfg = cfg
@@ -69,28 +58,13 @@ class Trainer(object):
             import fairscale
 
             if self.cfg.common.bf16:
-                raise ValueError(
-                    "FullyShardedDataParallel is not compatible with --bf16 or "
-                    "--memory-efficient-bf16"
-                )
+                raise ValueError("FullyShardedDataParallel is not compatible with --bf16 or --memory-efficient-bf16")
             if self.cfg.distributed_training.zero_sharding != "none":
-                raise ValueError(
-                    "FullyShardedDataParallel is not compatible with --zero-sharding "
-                    "option (it's already built in)"
-                )
-            if (
-                max(self.cfg.optimization.update_freq) > 1
-                and fairscale.__version__ < "0.4.0"
-            ):
-                raise RuntimeError(
-                    "Please update to fairscale 0.4.0 or newer when combining "
-                    "--update-freq with FullyShardedDataParallel"
-                )
+                raise ValueError("FullyShardedDataParallel is not compatible with --zero-sharding option (it's already built in)")
+            if (max(self.cfg.optimization.update_freq) > 1 and fairscale.__version__ < "0.4.0"):
+                raise RuntimeError("Please update to fairscale 0.4.0 or newer when combining --update-freq with FullyShardedDataParallel")
         else:
-            if (
-                hasattr(self.cfg.distributed_training, "cpu_offload")
-                and self.cfg.distributed_training.cpu_offload
-            ):
+            if (hasattr(self.cfg.distributed_training, "cpu_offload") and self.cfg.distributed_training.cpu_offload):
                 raise ValueError("--cpu-offload requires --ddp-backend=fully_sharded")
 
         # copy model and criterion to current device/dtype
@@ -106,28 +80,19 @@ class Trainer(object):
                 self._model = self._model.to(dtype=torch.bfloat16)
             elif cfg.common.amp:
                 self._amp_retries = 0
-        if (
-            not cfg.distributed_training.pipeline_model_parallel
-            # the DistributedFairseqModel wrapper will handle moving to device,
-            # so only handle cases which don't use the wrapper
-            and not self.use_distributed_wrapper
-        ):
+        if (not cfg.distributed_training.pipeline_model_parallel and not self.use_distributed_wrapper):
             self._criterion = self._criterion.to(device=self.device)
             self._model = self._model.to(device=self.device)
         self.pipeline_model_parallel = cfg.distributed_training.pipeline_model_parallel
         self.last_device = None
         if self.cuda and self.pipeline_model_parallel:
-            self.last_device = torch.device(
-                cfg.distributed_training.pipeline_devices[-1]
-            )
+            self.last_device = torch.device(cfg.distributed_training.pipeline_devices[-1])
 
         # check that shared parameters are preserved after device transfer
         for shared_param in shared_params:
             ref = _get_module_by_path(self._model, shared_param[0])
             for path in shared_param[1:]:
-                logger.info(
-                    "detected shared parameter: {} <- {}".format(shared_param[0], path)
-                )
+                logger.info("detected shared parameter: {} <- {}".format(shared_param[0], path))
                 _set_module_by_path(self._model, path, ref)
 
         self._dummy_batch = None  # indicates we don't have a dummy batch at first
@@ -143,7 +108,7 @@ class Trainer(object):
 
         # TODO(myleott): support tpu
         if self.cuda and self.data_parallel_world_size > 1:
-            self._grad_norm_buf = torch.cuda.DoubleTensor(self.data_parallel_world_size)
+            self._grad_norm_buf = torch.tensor(self.data_parallel_world_size, dtype=torch.double, device='cuda')
         else:
             self._grad_norm_buf = None
 
@@ -155,9 +120,7 @@ class Trainer(object):
         if self.cuda:
             self.cuda_env = utils.CudaEnvironment()
             if self.data_parallel_world_size > 1:
-                self.cuda_env_arr = distributed_utils.all_gather_list(
-                    self.cuda_env, group=distributed_utils.get_global_group()
-                )
+                self.cuda_env_arr = distributed_utils.all_gather_list(self.cuda_env, group=distributed_utils.get_global_group())
             else:
                 self.cuda_env_arr = [self.cuda_env]
             if self.data_parallel_rank == 0:
@@ -203,16 +166,12 @@ class Trainer(object):
 
     @property
     def use_distributed_wrapper(self) -> bool:
-        return (
-            self.data_parallel_world_size > 1 and not self.cfg.optimization.use_bmuf
-        ) or (self.is_fsdp and self.cfg.distributed_training.cpu_offload)
+        return (self.data_parallel_world_size > 1 and not self.cfg.optimization.use_bmuf) or (self.is_fsdp and self.cfg.distributed_training.cpu_offload)
 
     @property
     def should_save_checkpoint_on_current_rank(self) -> bool:
         """Indicates whether to save checkpoints on the current DDP rank."""
-        if (
-            self.is_fsdp and self.cfg.distributed_training.use_sharded_state
-        ) or getattr(self.cfg.model, "base_layers", 0) > 0:
+        if (self.is_fsdp and self.cfg.distributed_training.use_sharded_state) or getattr(self.cfg.model, "base_layers", 0) > 0:
             return True
         else:
             return self.is_data_parallel_master
@@ -229,9 +188,7 @@ class Trainer(object):
     def checkpoint_suffix(self) -> str:
         """Suffix to add to the checkpoint file name."""
         if self.is_fsdp and self.cfg.distributed_training.use_sharded_state:
-            return self.cfg.checkpoint.checkpoint_suffix + "-shard{0}".format(
-                self.data_parallel_rank
-            )
+            return self.cfg.checkpoint.checkpoint_suffix + "-shard{0}".format(self.data_parallel_rank)
         else:
             return self.cfg.checkpoint.checkpoint_suffix or ""
 

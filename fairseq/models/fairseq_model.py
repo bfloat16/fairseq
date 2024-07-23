@@ -203,13 +203,7 @@ class BaseFairseqModel(nn.Module):
 
             base_func = BaseFairseqModel.make_generation_fast_
             for n, m in module.named_modules():
-                if (
-                    m != self
-                    and hasattr(m, "make_generation_fast_")
-                    # don't call this implementation again, e.g., if
-                    # children modules also inherit from BaseFairseqModel
-                    and m.make_generation_fast_.__func__ is not base_func
-                ):
+                if (m != self and hasattr(m, "make_generation_fast_") and m.make_generation_fast_.__func__ is not base_func):
                     name = prefix + n
                     m.make_generation_fast_(name=name, **kwargs)
 
